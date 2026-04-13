@@ -2,9 +2,14 @@
 apiVersion: awx.ansible.com/v1beta1
 kind: AWX
 metadata:
-  name: awx-prod
+  name: awx-optional
   namespace: awx
 spec:
-  service_type: ClusterIP
+  service_type: LoadBalancer
   ingress_type: ingress
-  hostname: awx.example.com
+  hostname: awx.example.internal
+  postgres_storage_requirements:
+    requests:
+      storage: 20Gi
+  projects_persistence: true
+  projects_storage_size: 20Gi

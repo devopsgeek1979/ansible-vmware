@@ -1,0 +1,16 @@
+---
+ansible_user: ansible
+ansible_ssh_private_key_file: ~/.ssh/id_rsa
+ansible_become: true
+ansible_become_method: sudo
+
+controller_fqdn: tower-01.example.internal
+controller_admin_user: admin
+controller_admin_password: "CHANGE_ME"
+controller_validate_certs: false
+
+controller_inventory_name: linux-prod
+controller_execution_environment: "Default execution environment"
+controller_organization: Default
+
+aap_installer_bundle_path: /opt/ansible-automation-platform-setup-bundle-latest

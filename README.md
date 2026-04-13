@@ -1,113 +1,86 @@
 
-# 🚀 Ultra Enterprise DevOps Platform: AWX + Kubernetes + vSphere
+# Production-Ready Ansible Tower on vSphere
 
-## 🌙 The Incident That Changed Everything
+This repository provisions automation infrastructure on VMware vCenter and operationalizes Linux server management through Ansible Tower (Red Hat Ansible Automation Platform Controller, Tower successor).
 
-2:07 AM. PagerDuty 🔴  
-Production cluster unstable. AWX jobs failing. vCenter latency spikes.
+Primary vCenter endpoint used in this solution:
 
-What followed:
+- `192.168.1.10`
 
-- ❌ Manual SSH attempts
-- ❌ Drift across environments
-- ❌ No observability correlation
+## What You Get
 
-This repo is the **post-mortem turned platform**.
+- Terraform stack to provision Tower/Controller VMs and managed Linux VMs in vCenter
+- Ansible playbooks to bootstrap servers, install controller nodes, and register managed Linux hosts
+- Operations runbooks, failure handling, and security baseline documentation
+- Example observability configuration for Prometheus + Loki
 
----
+## Repository Layout
 
-## 🧠 What This Platform Solves
+- `terraform/`: vSphere provisioning for controller and managed Linux nodes
+- `ansible/`: bootstrap, controller install/configuration, and Linux operations playbooks
+- `docs/`: architecture, deployment guide, runbooks, and examples
+- `observability/`: starter Prometheus and Loki configuration
+- `screenshots/`: visual artifacts for dashboards and cluster views
 
-✔ Deterministic infrastructure (Terraform)  
-✔ Declarative automation (AWX Operator)  
-✔ Observability-first design (Prometheus + Grafana + Loki)  
-✔ Failure-aware engineering  
+## Architecture
 
----
+`vCenter (192.168.1.10)` → `Terraform` → `Controller VMs + Linux VMs` → `Ansible Automation Controller` → `Managed Linux Fleet`
 
-## 🏗️ Full Architecture
+Reference docs:
 
-vSphere → Terraform → K8s Cluster → AWX Operator → Vault → Observability Stack
+- `docs/architecture.md`
+- `docs/deployment-guide.md`
 
----
+## Quick Start
 
-## 📸 Screenshots
+### 1) Provision infrastructure in vSphere
 
-See `/screenshots/`:
-
-- awx-dashboard.png
-- grafana-dashboard.png
-- k8s-pods.png
-
----
-
-## ⚙️ Deployment Flow
-
-1. Terraform provisions infra
-2. K8s cluster bootstrapped
-3. AWX deployed via Operator
-4. Vault injects secrets
-5. Monitoring stack activated
-
----
-
-## 💥 Failure Simulations Included
-
-### 1. Node Failure
-
-Simulate:
-
-```bash
-kubectl drain <node>
+```sh
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+terraform init
+terraform plan
+terraform apply
 ```
 
-Recovery:
+### 2) Prepare Ansible dependencies
 
-- Pods rescheduled
-- AWX remains available
-
----
-
-### 2. AWX Pod Crash
-
-```bash
-kubectl delete pod -n awx -l app=awx
+```sh
+cd ../ansible
+ansible-galaxy collection install -r requirements.yml
 ```
 
-Outcome:
+### 3) Update inventory with provisioned IPs
 
-- Operator auto-recovers
+- Edit `ansible/inventories/prod/hosts.yml`
+- Fill controller and managed host addresses from `terraform output`
 
----
+### 4) Bootstrap and install controller
 
-### 3. vCenter Latency
+```sh
+ansible-playbook -i inventories/prod/hosts.yml playbooks/01-bootstrap-linux.yml
+ansible-playbook -i inventories/prod/hosts.yml playbooks/02-install-automation-controller.yml
+ansible-playbook -i inventories/prod/hosts.yml playbooks/03-configure-controller-and-inventory.yml
+```
 
-- Simulated API delay
-- AWX job timeout handling
+### 5) Run Linux management workflow
 
----
+```sh
+ansible-playbook -i inventories/prod/hosts.yml playbooks/04-linux-patching-demo.yml
+```
 
-## 📊 Observability
+## Production Readiness Highlights
 
-- Prometheus scraping AWX + K8s
-- Grafana dashboards (included JSON)
-- Loki logs aggregation
+- Idempotent provisioning and automation design
+- Dedicated controller and managed node groups
+- TLS, RBAC, and secret-handling guidance in `docs/security-baseline.md`
+- Incident response guidance in `docs/failure-runbooks.md`
 
----
+## Notes on Tower Naming
 
-## 🔐 Vault Integration
+- “Ansible Tower” is now “Automation Controller” in Ansible Automation Platform.
+- This repository uses “Tower” and “Controller” consistently where appropriate.
 
-- Dynamic secrets
-- Token-based auth
-- No plaintext credentials
+## Next Step
 
----
-
-## 🚀 Why This Repo is Different
-
-This is not a demo.  
-This is **how real platform teams build resilience**.
-
----
-
-👨‍💻 Author: Shashi Pal
+Use the deployment guide in `docs/deployment-guide.md` to perform a full end-to-end rollout in your environment.

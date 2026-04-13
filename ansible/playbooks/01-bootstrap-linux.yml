@@ -1,0 +1,30 @@
+---
+- name: Bootstrap controller and managed Linux hosts
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Ensure baseline packages are present
+      ansible.builtin.package:
+        name:
+          - python3
+          - python3-pip
+          - curl
+          - git
+          - unzip
+          - rsync
+          - firewalld
+          - chrony
+        state: present
+
+    - name: Ensure chronyd is running
+      ansible.builtin.service:
+        name: chronyd
+        enabled: true
+        state: started
+
+    - name: Ensure firewalld is running
+      ansible.builtin.service:
+        name: firewalld
+        enabled: true
+        state: started

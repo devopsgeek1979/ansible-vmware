@@ -1,8 +1,26 @@
 
 global:
   scrape_interval: 15s
+  evaluation_interval: 30s
 
 scrape_configs:
-  - job_name: 'kubernetes'
+  - job_name: "automation-controller"
+    metrics_path: /api/v2/metrics/
+    scheme: https
+    tls_config:
+      insecure_skip_verify: true
     static_configs:
-      - targets: ['localhost:9100']
+      - targets:
+          - tower-01.example.internal
+
+  - job_name: "linux-node-exporters"
+    static_configs:
+      - targets:
+          - linux-01.example.internal:9100
+          - linux-02.example.internal:9100
+
+  - job_name: "controller-node-exporter"
+    static_configs:
+      - targets:
+          - tower-01.example.internal:9100
+          - tower-02.example.internal:9100

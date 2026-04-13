@@ -1,0 +1,19 @@
+[automationcontroller]
+{% for host in groups['automation_controller'] %}
+{{ host }} ansible_host={{ hostvars[host]['ansible_host'] }}
+{% endfor %}
+
+[database]
+{{ groups['automation_controller'][0] }}
+
+[all:vars]
+admin_password={{ controller_admin_password }}
+pg_host={{ groups['automation_controller'][0] }}
+pg_port=5432
+pg_database=awx
+pg_username=awx
+pg_password={{ controller_admin_password }}
+create_preload_data=True
+registry_url=registry.redhat.io
+registry_username=CHANGE_ME
+registry_password=CHANGE_ME

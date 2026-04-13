@@ -1,0 +1,41 @@
+---
+- name: Configure Automation Controller inventory and hosts
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    controller_hostname: "https://{{ controller_fqdn }}"
+
+  tasks:
+    - name: Ensure organization exists
+      awx.awx.organization:
+        name: "{{ controller_organization }}"
+        controller_host: "{{ controller_hostname }}"
+        controller_username: "{{ controller_admin_user }}"
+        controller_password: "{{ controller_admin_password }}"
+        validate_certs: "{{ controller_validate_certs }}"
+        state: present
+
+    - name: Ensure inventory exists
+      awx.awx.inventory:
+        name: "{{ controller_inventory_name }}"
+        organization: "{{ controller_organization }}"
+        controller_host: "{{ controller_hostname }}"
+        controller_username: "{{ controller_admin_user }}"
+        controller_password: "{{ controller_admin_password }}"
+        validate_certs: "{{ controller_validate_certs }}"
+        state: present
+
+    - name: Register managed hosts in controller inventory
+      awx.awx.host:
+        name: "{{ item }}"
+        inventory: "{{ controller_inventory_name }}"
+        variables:
+          ansible_host: "{{ hostvars[item].ansible_host }}"
+          ansible_user: "{{ ansible_user }}"
+        controller_host: "{{ controller_hostname }}"
+        controller_username: "{{ controller_admin_user }}"
+        controller_password: "{{ controller_admin_password }}"
+        validate_certs: "{{ controller_validate_certs }}"
+        state: present
+      loop: "{{ groups['managed_linux'] }}"

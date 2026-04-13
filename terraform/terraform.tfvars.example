@@ -1,0 +1,26 @@
+vsphere_server   = "192.168.1.10"
+vsphere_user     = "administrator@vsphere.local"
+vsphere_password = "CHANGE_ME"
+
+allow_unverified_ssl = true
+
+datacenter    = "DC1"
+cluster       = "Cluster01"
+datastore     = "Datastore01"
+network       = "VM Network"
+template_name = "rhel9-golden-template"
+
+vm_folder    = "Automation"
+vm_domain    = "example.internal"
+dns_servers  = ["192.168.1.53", "1.1.1.1"]
+ipv4_gateway = "192.168.1.1"
+
+vm_name_prefix      = "ansible"
+tower_node_count    = 2
+tower_cpu           = 4
+tower_memory_mb     = 8192
+tower_disk_gb       = 120
+managed_linux_count = 3
+managed_cpu         = 2
+managed_memory_mb   = 4096
+managed_disk_gb     = 60

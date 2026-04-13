@@ -1,0 +1,30 @@
+---
+- name: Install Ansible Automation Platform Controller
+  hosts: automation_controller
+  gather_facts: true
+
+  pre_tasks:
+    - name: Verify installer bundle path exists
+      ansible.builtin.stat:
+        path: "{{ aap_installer_bundle_path }}"
+      register: installer_path
+
+    - name: Fail if installer path is missing
+      ansible.builtin.assert:
+        that:
+          - installer_path.stat.exists
+        fail_msg: "AAP installer bundle path not found: {{ aap_installer_bundle_path }}"
+
+  tasks:
+    - name: Render AAP installer inventory
+      ansible.builtin.template:
+        src: ../templates/aap-installer-inventory.ini.j2
+        dest: "{{ aap_installer_bundle_path }}/inventory"
+        mode: "0640"
+
+    - name: Run AAP installer setup
+      ansible.builtin.command: ./setup.sh
+      args:
+        chdir: "{{ aap_installer_bundle_path }}"
+      register: setup_output
+      changed_when: "'PLAY RECAP' in setup_output.stdout or setup_output.rc == 0"
