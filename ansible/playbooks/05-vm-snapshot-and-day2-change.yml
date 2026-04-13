@@ -1,0 +1,57 @@
+---
+- name: Snapshot existing VMs and apply day-2 infrastructure changes
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Create snapshot before any VM change
+      community.vmware.vmware_guest_snapshot:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: "{{ vcenter_validate_certs }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        folder: "{{ vcenter_folder }}"
+        name: "{{ item.name }}"
+        state: present
+        snapshot_name: "{{ item.snapshot_name }}"
+        description: "{{ item.snapshot_description }}"
+        quiesce: true
+        memory_dump: false
+      loop: "{{ vm_day2_targets }}"
+
+    - name: Apply CPU memory and network changes on existing VMs
+      community.vmware.vmware_guest:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: "{{ vcenter_validate_certs }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        folder: "{{ vcenter_folder }}"
+        name: "{{ item.name }}"
+        state: present
+        hardware:
+          num_cpus: "{{ item.cpu }}"
+          memory_mb: "{{ item.memory_mb }}"
+        networks:
+          - name: "{{ item.network_name }}"
+            device_type: "{{ item.network_type }}"
+      loop: "{{ vm_day2_targets }}"
+
+    - name: Add additional data disk to existing VMs
+      community.vmware.vmware_guest_disk:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: "{{ vcenter_validate_certs }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        folder: "{{ vcenter_folder }}"
+        name: "{{ item.name }}"
+        disk:
+          - size_gb: "{{ item.additional_disk_gb }}"
+            type: thin
+            state: present
+            datastore: "{{ vcenter_datastore }}"
+            scsi_controller: 0
+            unit_number: 1
+      loop: "{{ vm_day2_targets }}"

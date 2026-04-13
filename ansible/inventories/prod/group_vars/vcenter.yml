@@ -1,0 +1,53 @@
+---
+vcenter_hostname: 192.168.1.10
+vcenter_username: administrator@vsphere.local
+vcenter_password: CHANGE_ME
+vcenter_validate_certs: false
+vcenter_datacenter: DC1
+vcenter_cluster: Cluster01
+vcenter_folder: /DC1/vm/Automation
+vcenter_datastore: Datastore01
+vcenter_resource_pool: /DC1/host/Cluster01/Resources
+vcenter_default_portgroup: VM Network
+
+vm_day2_targets:
+  - name: ansible-linux-01
+    snapshot_name: pre-change-20260413
+    snapshot_description: Snapshot before CPU/memory/disk/network changes
+    cpu: 4
+    memory_mb: 8192
+    additional_disk_gb: 40
+    network_name: VM Network
+    network_type: vmxnet3
+  - name: ansible-linux-02
+    snapshot_name: pre-change-20260413
+    snapshot_description: Snapshot before CPU/memory/disk/network changes
+    cpu: 4
+    memory_mb: 8192
+    additional_disk_gb: 40
+    network_name: VM Network
+    network_type: vmxnet3
+
+vm_deploy_template_targets:
+  - name: app-template-01
+    template: rhel9-golden-template
+    cpu: 2
+    memory_mb: 4096
+    disk_gb: 60
+    network_name: VM Network
+
+vm_deploy_ova_targets:
+  - name: app-ova-01
+    ova_path: /mnt/images/ubuntu-server.ova
+    cpu: 2
+    memory_mb: 4096
+    network_name: VM Network
+
+vm_deploy_iso_targets:
+  - name: app-iso-01
+    guest_id: otherGuest64
+    iso_path: "[Datastore01] iso/rhel-9.4-x86_64-dvd.iso"
+    cpu: 2
+    memory_mb: 4096
+    disk_gb: 80
+    network_name: VM Network

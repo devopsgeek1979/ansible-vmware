@@ -1,7 +1,7 @@
 TF_DIR=terraform
 ANSIBLE_DIR=ansible
 
-.PHONY: tf-init tf-plan tf-apply tf-output ansible-deps bootstrap install-controller register-hosts patch-linux
+.PHONY: tf-init tf-plan tf-apply tf-output ansible-deps bootstrap install-controller register-hosts patch-linux vm-day2 vm-deploy-all vm-deploy-template-ova-iso
 
 tf-init:
 	cd $(TF_DIR) && terraform init
@@ -29,3 +29,12 @@ register-hosts:
 
 patch-linux:
 	cd $(ANSIBLE_DIR) && ansible-playbook -i inventories/prod/hosts.yml playbooks/04-linux-patching-demo.yml
+
+vm-day2:
+	cd $(ANSIBLE_DIR) && ansible-playbook -i inventories/prod/hosts.yml playbooks/05-vm-snapshot-and-day2-change.yml
+
+vm-deploy-all:
+	cd $(ANSIBLE_DIR) && ansible-playbook -i inventories/prod/hosts.yml playbooks/06-deploy-vm-from-template-ova-iso.yml
+
+vm-deploy-template-ova-iso:
+	cd $(TF_DIR) && terraform plan -var-file=terraform.tfvars -var-file=vm-lifecycle.auto.tfvars

@@ -70,3 +70,9 @@ ansible -i inventories/prod/hosts.yml managed_linux -m shell -a "hostnamectl"
 ```
 
 Validate controller web access at `https://<controller_fqdn>`.
+
+## VM Lifecycle and Day-2 Operations
+
+For snapshot automation, VM resize (CPU/memory/disk/network), and new VM provisioning from template/OVA/ISO, see:
+
+- `docs/vm-lifecycle-automation.md`

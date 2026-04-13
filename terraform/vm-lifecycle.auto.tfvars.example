@@ -1,0 +1,63 @@
+existing_vm_snapshot_enabled = true
+existing_vm_snapshot_name    = "pre-change-20260413"
+
+managed_existing_vms = {
+  linux01 = {
+    vm_name              = "ansible-linux-01"
+    cpu                  = 4
+    memory_mb            = 8192
+    disk0_size_gb        = 100
+    network_name         = "VM Network"
+    network_adapter_type = "vmxnet3"
+    datastore            = "Datastore01"
+    resource_pool_path   = "Cluster01/Resources"
+    folder               = "Automation"
+    guest_id             = "rhel9_64Guest"
+    firmware             = "efi"
+    scsi_type            = "pvscsi"
+  }
+}
+
+template_deployments = {
+  app01 = {
+    vm_name             = "app-template-01"
+    template_name       = "rhel9-golden-template"
+    cpu                 = 2
+    memory_mb           = 4096
+    disk_gb             = 80
+    network_name        = "VM Network"
+    folder              = "Automation"
+    domain              = "example.internal"
+    customization_ipv4  = false
+    static_ipv4_address = ""
+    static_ipv4_netmask = 0
+    ipv4_gateway        = ""
+  }
+}
+
+ova_deployments = {
+  app02 = {
+    vm_name              = "app-ova-01"
+    local_ovf_path       = "/mnt/images/ubuntu-server.ova"
+    cpu                  = 2
+    memory_mb            = 4096
+    network_name         = "VM Network"
+    folder               = "Automation"
+    disk_provisioning    = "thin"
+    ip_protocol          = "IPV4"
+    ip_allocation_policy = "dhcpPolicy"
+  }
+}
+
+iso_deployments = {
+  app03 = {
+    vm_name      = "app-iso-01"
+    guest_id     = "otherGuest64"
+    cpu          = 2
+    memory_mb    = 4096
+    disk_gb      = 80
+    network_name = "VM Network"
+    folder       = "Automation"
+    iso_path     = "[Datastore01] iso/rhel-9.4-x86_64-dvd.iso"
+  }
+}

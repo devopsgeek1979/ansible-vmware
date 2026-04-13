@@ -1,0 +1,78 @@
+---
+- name: Deploy new VMs from template, OVA, and ISO
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Deploy VMs from template
+      community.vmware.vmware_guest:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: "{{ vcenter_validate_certs }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        cluster: "{{ vcenter_cluster }}"
+        folder: "{{ vcenter_folder }}"
+        datastore: "{{ vcenter_datastore }}"
+        name: "{{ item.name }}"
+        state: poweredon
+        template: "{{ item.template }}"
+        hardware:
+          num_cpus: "{{ item.cpu }}"
+          memory_mb: "{{ item.memory_mb }}"
+        disk:
+          - size_gb: "{{ item.disk_gb }}"
+            type: thin
+            datastore: "{{ vcenter_datastore }}"
+        networks:
+          - name: "{{ item.network_name }}"
+            device_type: vmxnet3
+        wait_for_ip_address: true
+      loop: "{{ vm_deploy_template_targets }}"
+
+    - name: Deploy VMs from OVA
+      community.vmware.vmware_deploy_ovf:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: "{{ vcenter_validate_certs }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        cluster: "{{ vcenter_cluster }}"
+        datastore: "{{ vcenter_datastore }}"
+        folder: "{{ vcenter_folder }}"
+        name: "{{ item.name }}"
+        ovf: "{{ item.ova_path }}"
+        power_on: true
+        networks:
+          "VM Network": "{{ item.network_name }}"
+      loop: "{{ vm_deploy_ova_targets }}"
+
+    - name: Deploy VM shell from ISO for unattended installation
+      community.vmware.vmware_guest:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: "{{ vcenter_validate_certs }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        cluster: "{{ vcenter_cluster }}"
+        folder: "{{ vcenter_folder }}"
+        datastore: "{{ vcenter_datastore }}"
+        name: "{{ item.name }}"
+        state: poweredon
+        guest_id: "{{ item.guest_id }}"
+        hardware:
+          num_cpus: "{{ item.cpu }}"
+          memory_mb: "{{ item.memory_mb }}"
+        disk:
+          - size_gb: "{{ item.disk_gb }}"
+            type: thin
+            datastore: "{{ vcenter_datastore }}"
+        cdrom:
+          - controller_number: 0
+            unit_number: 0
+            type: iso
+            iso_path: "{{ item.iso_path }}"
+        networks:
+          - name: "{{ item.network_name }}"
+            device_type: vmxnet3
+      loop: "{{ vm_deploy_iso_targets }}"

@@ -3,6 +3,13 @@
 
 This repository provisions automation infrastructure on VMware vCenter and operationalizes Linux server management through Ansible Tower (Red Hat Ansible Automation Platform Controller, Tower successor).
 
+## Repository Description
+
+Production-grade Infrastructure as Code and Automation-as-Code solution for provisioning Ansible Tower/Automation Controller on VMware vSphere (`192.168.1.10`) and centrally managing Linux servers at scale with secure, repeatable workflows.
+
+**GitHub short description (recommended):**
+`Production-ready Ansible Tower on vSphere (192.168.1.10) with Terraform provisioning, Controller setup, and Linux fleet management automation.`
+
 Primary vCenter endpoint used in this solution:
 
 - `192.168.1.10`
@@ -75,6 +82,33 @@ ansible-playbook -i inventories/prod/hosts.yml playbooks/04-linux-patching-demo.
 - Dedicated controller and managed node groups
 - TLS, RBAC, and secret-handling guidance in `docs/security-baseline.md`
 - Incident response guidance in `docs/failure-runbooks.md`
+
+## VM Lifecycle Automation
+
+- Snapshot existing VMs before changes
+- Apply CPU, memory, HDD, and network updates on existing VMs
+- Deploy new VMs from template, OVA, and ISO patterns
+
+### Ansible commands
+
+```sh
+cd ansible
+ansible-playbook -i inventories/prod/hosts.yml playbooks/05-vm-snapshot-and-day2-change.yml
+ansible-playbook -i inventories/prod/hosts.yml playbooks/06-deploy-vm-from-template-ova-iso.yml
+```
+
+### Terraform commands
+
+```sh
+cd terraform
+cp vm-lifecycle.auto.tfvars.example vm-lifecycle.auto.tfvars
+terraform plan -var-file=terraform.tfvars -var-file=vm-lifecycle.auto.tfvars
+terraform apply -var-file=terraform.tfvars -var-file=vm-lifecycle.auto.tfvars
+```
+
+Detailed guide:
+
+- `docs/vm-lifecycle-automation.md`
 
 ## Notes on Tower Naming
 
