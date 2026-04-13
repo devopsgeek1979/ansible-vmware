@@ -1,120 +1,203 @@
 
 # Production-Ready Ansible Tower on vSphere
 
-This repository provisions automation infrastructure on VMware vCenter and operationalizes Linux server management through Ansible Tower (Red Hat Ansible Automation Platform Controller, Tower successor).
+This repository shows how to provision VMware vSphere infrastructure, deploy Ansible Tower / Automation Controller, onboard Linux servers, and automate day-2 VM lifecycle operations from a single codebase.
 
-## Repository Description
-
-Production-grade Infrastructure as Code and Automation-as-Code solution for provisioning Ansible Tower/Automation Controller on VMware vSphere (`192.168.1.10`) and centrally managing Linux servers at scale with secure, repeatable workflows.
-
-**GitHub short description (recommended):**
-`Production-ready Ansible Tower on vSphere (192.168.1.10) with Terraform provisioning, Controller setup, and Linux fleet management automation.`
-
-Primary vCenter endpoint used in this solution:
+The reference vCenter used in this project is:
 
 - `192.168.1.10`
 
-## What You Get
+## Repository Description
 
-- Terraform stack to provision Tower/Controller VMs and managed Linux VMs in vCenter
-- Ansible playbooks to bootstrap servers, install controller nodes, and register managed Linux hosts
-- Operations runbooks, failure handling, and security baseline documentation
-- Example observability configuration for Prometheus + Loki
+Production-grade Infrastructure as Code and Automation-as-Code solution for VMware vCenter that covers:
 
-## Repository Layout
+- new VM provisioning from template, OVA, and ISO patterns
+- installation of Ansible Tower / Automation Controller
+- onboarding and management of Linux servers
+- VM snapshots before change windows
+- CPU, memory, disk, and network changes for existing VMs
 
-- `terraform/`: vSphere provisioning for controller and managed Linux nodes
-- `ansible/`: bootstrap, controller install/configuration, and Linux operations playbooks
-- `docs/`: architecture, deployment guide, runbooks, and examples
-- `observability/`: starter Prometheus and Loki configuration
-- `screenshots/`: visual artifacts for dashboards and cluster views
+**GitHub short description:**
+`Production-ready Ansible Tower on vSphere (192.168.1.10) with Terraform provisioning, Controller setup, Linux fleet management, and VM lifecycle automation.`
 
-## Architecture
+## What This Repo Does
 
-`vCenter (192.168.1.10)` → `Terraform` → `Controller VMs + Linux VMs` → `Ansible Automation Controller` → `Managed Linux Fleet`
+- Provisions controller and Linux VMs in VMware vCenter using Terraform
+- Installs and configures Automation Controller using Ansible
+- Registers Linux servers into the controller inventory
+- Demonstrates patching and compliance jobs for Linux hosts
+- Automates VM lifecycle tasks such as snapshot, resize, disk add, network update, and new VM deployment
 
-Reference docs:
+## Repository Structure
 
-- `docs/architecture.md`
-- `docs/deployment-guide.md`
+- `terraform/`: Infrastructure provisioning and VM lifecycle definitions
+- `ansible/`: Ansible config, inventories, variables, templates, and playbooks
+- `ansible/playbooks/`: Playbooks for bootstrap, controller install, Linux operations, and vCenter VM automation
+- `docs/`: Architecture, deployment guide, security baseline, runbooks, and VM lifecycle guide
+- `observability/`: Prometheus and Loki baseline configs
 
-## Quick Start
+## Files You Must Update For Your Environment
 
-### 1) Provision infrastructure in vSphere
+Before running anything, update these files with your own values:
+
+### vCenter connection values
+
+- `ansible/inventories/prod/group_vars/vcenter.yml`
+- `terraform/terraform.tfvars`
+- `terraform/vm-lifecycle.auto.tfvars`
+
+Change at minimum:
+
+- `vcenter_hostname`
+- `vcenter_username`
+- `vcenter_password`
+- `vcenter_datacenter`
+- `vcenter_cluster`
+- `vcenter_folder`
+- `vcenter_datastore`
+- `vcenter_default_portgroup`
+
+### Automation Controller values
+
+- `ansible/inventories/prod/group_vars/all.yml`
+
+Change at minimum:
+
+- `controller_fqdn`
+- `controller_admin_user`
+- `controller_admin_password`
+- `aap_installer_bundle_path`
+
+### Inventory host IPs
+
+- `ansible/inventories/prod/hosts.yml`
+
+Update:
+
+- controller node IPs
+- managed Linux node IPs
+
+## Step-by-Step Execution Flow
+
+## 1. Prepare Terraform variables
 
 ```sh
 cd terraform
 cp terraform.tfvars.example terraform.tfvars
+cp vm-lifecycle.auto.tfvars.example vm-lifecycle.auto.tfvars
+```
+
+Edit both files and replace all example values with your own vCenter environment values.
+
+## 2. Provision base infrastructure in vCenter
+
+```sh
 terraform init
 terraform plan
 terraform apply
 ```
 
-### 2) Prepare Ansible dependencies
+This creates the controller and Linux VM estate defined in Terraform.
+
+## 3. Collect VM IP addresses
+
+```sh
+terraform output
+```
+
+Use the output values to update:
+
+- `ansible/inventories/prod/hosts.yml`
+
+## 4. Install Ansible collections
 
 ```sh
 cd ../ansible
 ansible-galaxy collection install -r requirements.yml
 ```
 
-### 3) Update inventory with provisioned IPs
-
-- Edit `ansible/inventories/prod/hosts.yml`
-- Fill controller and managed host addresses from `terraform output`
-
-### 4) Bootstrap and install controller
+## 5. Bootstrap controller and Linux hosts
 
 ```sh
 ansible-playbook -i inventories/prod/hosts.yml playbooks/01-bootstrap-linux.yml
+```
+
+This prepares target hosts with required packages and baseline services.
+
+## 6. Install Automation Controller
+
+```sh
 ansible-playbook -i inventories/prod/hosts.yml playbooks/02-install-automation-controller.yml
+```
+
+This uses the installer bundle referenced by `aap_installer_bundle_path`.
+
+## 7. Register Linux servers in Controller
+
+```sh
 ansible-playbook -i inventories/prod/hosts.yml playbooks/03-configure-controller-and-inventory.yml
 ```
 
-### 5) Run Linux management workflow
+This creates the organization, inventory, and managed host records in Controller.
+
+## 8. Run Linux operations
 
 ```sh
 ansible-playbook -i inventories/prod/hosts.yml playbooks/04-linux-patching-demo.yml
 ```
 
-## Production Readiness Highlights
+This demonstrates package patching and baseline package enforcement.
 
-- Idempotent provisioning and automation design
-- Dedicated controller and managed node groups
-- TLS, RBAC, and secret-handling guidance in `docs/security-baseline.md`
-- Incident response guidance in `docs/failure-runbooks.md`
+## 9. Run VM lifecycle automation
 
-## VM Lifecycle Automation
-
-- Snapshot existing VMs before changes
-- Apply CPU, memory, HDD, and network updates on existing VMs
-- Deploy new VMs from template, OVA, and ISO patterns
-
-### Ansible commands
+For snapshots and day-2 changes:
 
 ```sh
-cd ansible
 ansible-playbook -i inventories/prod/hosts.yml playbooks/05-vm-snapshot-and-day2-change.yml
+```
+
+For template, OVA, and ISO VM deployment:
+
+```sh
 ansible-playbook -i inventories/prod/hosts.yml playbooks/06-deploy-vm-from-template-ova-iso.yml
 ```
 
-### Terraform commands
+For Terraform-driven lifecycle provisioning:
 
 ```sh
-cd terraform
-cp vm-lifecycle.auto.tfvars.example vm-lifecycle.auto.tfvars
+cd ../terraform
 terraform plan -var-file=terraform.tfvars -var-file=vm-lifecycle.auto.tfvars
 terraform apply -var-file=terraform.tfvars -var-file=vm-lifecycle.auto.tfvars
 ```
 
-Detailed guide:
+## Playbook Documentation
 
+Detailed playbook explanations are available here:
+
+- `ansible/README.md`
+- `ansible/playbooks/README.md`
+
+These documents explain:
+
+- what each playbook does
+- the code logic used inside it
+- which variables it depends on
+- exactly where to change values for your vCenter environment
+
+## Supporting Documentation
+
+- `docs/architecture.md`
+- `docs/deployment-guide.md`
+- `docs/failure-runbooks.md`
+- `docs/security-baseline.md`
 - `docs/vm-lifecycle-automation.md`
 
-## Notes on Tower Naming
+## Notes
 
-- “Ansible Tower” is now “Automation Controller” in Ansible Automation Platform.
-- This repository uses “Tower” and “Controller” consistently where appropriate.
+- “Ansible Tower” is now called “Automation Controller” in Ansible Automation Platform.
+- This repo uses the terms “Tower” and “Controller” to help users familiar with older naming.
+- ISO deployment in automation typically requires unattended install assets such as Kickstart, Preseed, or Autoinstall.
 
-## Next Step
+## Recommended Next Step
 
-Use the deployment guide in `docs/deployment-guide.md` to perform a full end-to-end rollout in your environment.
+Start with `ansible/playbooks/README.md` if you want to understand the logic of every playbook before running the repo.
